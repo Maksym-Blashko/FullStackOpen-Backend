@@ -59,6 +59,12 @@ getHTMLPage = () => {
     return page
 }
 
+getPerson = (idString) => {
+    const id = Number(idString)
+    const person = persons.find(person => person.id === id)
+    return person
+}
+
 // Requests
 app.get('/api/persons', (request, response) => {
     response.json(persons)
@@ -66,6 +72,16 @@ app.get('/api/persons', (request, response) => {
 
 app.get('/info', (request, response) => {
     response.send(getHTMLPage())
+})
+
+app.get('/api/persons/:id', (request, response) => {
+    const person = getPerson(request.params.id)
+
+    if (person) {
+        response.json(person)
+    } else {
+        response.status(404).end()
+    }
 })
 
 const PORT = 3001
