@@ -1,6 +1,9 @@
 const express = require('express')
 const app = express()
 
+// Data
+let daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+let months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 let persons = [
     {
         "id": 1,
@@ -24,8 +27,45 @@ let persons = [
     }
 ]
 
+// Methods
+getCurrentDate = () => {
+    const date = new Date()
+    const dayOfWeek = daysOfWeek[date.getDay()]
+    const day = date.getDate()
+    const year = date.getFullYear()
+    const month = months[date.getMonth()]
+    const hour = date.getHours()
+    const minutes = date.getMinutes()
+    const seconds = date.getSeconds()
+    const timezoneOffset = date.getTimezoneOffset()
+
+    const formattedHour = hour < 10 ? `0${hour}` : hour;
+    const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+    const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
+
+    const res = `${dayOfWeek} ${month} ${day}, ${year} ${formattedHour}:${formattedMinutes}:${formattedSeconds} UTC${timezoneOffset < 0 ? '+' : '-'}${Math.abs(timezoneOffset / 60)}`;
+    console.log(res)
+
+    return res
+}
+
+getHTMLPage = () => {
+    const page = `
+        <div>
+            <p>Phonebook has info for ${persons.length} people</p>
+            <p>${getCurrentDate()}</p>
+        </div>`
+
+    return page
+}
+
+// Requests
 app.get('/api/persons', (request, response) => {
     response.json(persons)
+})
+
+app.get('/info', (request, response) => {
+    response.send(getHTMLPage())
 })
 
 const PORT = 3001
