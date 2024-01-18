@@ -1,6 +1,10 @@
 const express = require('express')
+const morgan = require('morgan')
+
 const app = express()
+
 app.use(express.json())
+app.use(morgan('tiny'))
 
 // Data
 let daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -96,7 +100,7 @@ validateRequest = (request) => {
     if (!name || !number) {
         return { error: 'Name and Number are required fields' }
     }
-    
+
     if (persons.some(person => person.name === name)) {
         return { error: 'Name already exists in the phonebook' }
     }
