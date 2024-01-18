@@ -1,5 +1,6 @@
 const express = require('express')
 const app = express()
+app.use(express.json())
 
 // Data
 let daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -74,6 +75,18 @@ deletePerson = (idString) => {
     return person
 }
 
+addPerson = (body) => {
+    const person = {
+        "id": generateID(),
+        "name": body.name,
+        "number": body.number
+    }
+    persons = persons.concat(person)
+    return person
+}
+
+generateID = () => Math.floor(Math.random() * 1000000)
+
 // Requests
 app.get('/api/persons', (request, response) => {
     response.json(persons)
@@ -101,6 +114,11 @@ app.delete('/api/persons/:id', (request, response) => {
     } else {
         response.status(404).end()
     }
+})
+
+app.post('/api/persons', (request, response) => {
+    const person = addPerson(request.body)
+    response.json(person)
 })
 
 const PORT = 3001
