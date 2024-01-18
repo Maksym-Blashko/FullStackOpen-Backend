@@ -65,6 +65,15 @@ getPerson = (idString) => {
     return person
 }
 
+deletePerson = (idString) => {
+    const id = Number(idString)
+    const person = persons.find(person => person.id === id)
+    if (person) {
+        persons = persons.filter(person => person.id !== id)
+    }
+    return person
+}
+
 // Requests
 app.get('/api/persons', (request, response) => {
     response.json(persons)
@@ -79,6 +88,16 @@ app.get('/api/persons/:id', (request, response) => {
 
     if (person) {
         response.json(person)
+    } else {
+        response.status(404).end()
+    }
+})
+
+app.delete('/api/persons/:id', (request, response) => {
+    const person = deletePerson(request.params.id)
+
+    if (person) {
+        response.status(204).end()
     } else {
         response.status(404).end()
     }
