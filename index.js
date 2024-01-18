@@ -87,6 +87,21 @@ addPerson = (body) => {
 
 generateID = () => Math.floor(Math.random() * 1000000)
 
+validateRequest = (request) => {
+    if (!request.body) {
+        return { error: 'content missing' }
+    }
+
+    const { name, number } = request.body
+    if (!name || !number) {
+        return { error: 'Name and Number are required fields' }
+    }
+    
+    if (persons.some(person => person.name === name)) {
+        return { error: 'Name already exists in the phonebook' }
+    }
+}
+
 // Requests
 app.get('/api/persons', (request, response) => {
     response.json(persons)
@@ -117,6 +132,11 @@ app.delete('/api/persons/:id', (request, response) => {
 })
 
 app.post('/api/persons', (request, response) => {
+    const error = validateRequest(request)
+    if (error) {
+        return response.status(400).json(error)
+    }
+
     const person = addPerson(request.body)
     response.json(person)
 })
