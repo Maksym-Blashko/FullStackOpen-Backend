@@ -1,1 +1,1 @@
-https://fullstackopen-backend-blashko.fly.dev/api/persons/
+https://fullstackopen-backend-blashko.fly.dev
