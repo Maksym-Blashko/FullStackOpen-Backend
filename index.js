@@ -8,10 +8,21 @@ const app = express()
 
 morgan.token('req-body', (req) => JSON.stringify(req.body))
 
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+
+    if (error.name === 'CastError') {
+        return response.status(400).send({ error: 'malformatted id' })
+    }
+
+    next(error)
+}
+
 app.use(cors())
-app.use(express.json())
 app.use(express.static('static_dist'))
+app.use(express.json())
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :req-body'))
+app.use(errorHandler)
 
 // Data
 let daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -66,22 +77,18 @@ validateRequest = (request) => {
 }
 
 // Requests
-app.get('/api/persons', (request, response) => {
+app.get('/api/persons', (request, response, next) => {
     Person
         .find({})
-        .then(persons => {
-            response.json(persons)
-        })
-        .catch(error => {
-            console.log('Error fetching phonebook: ', error)
-        })
+        .then(persons => response.json(persons))
+        .catch(error => next(error))
 })
 
 app.get('/info', (request, response) => {
     response.send(getHTMLPage())
 })
 
-app.get('/api/persons/:id', (request, response) => {
+app.get('/api/persons/:id', (request, response, next) => {
     Person
         .findById(request.params.id)
         .then(person => {
@@ -89,27 +96,19 @@ app.get('/api/persons/:id', (request, response) => {
                 response.json(person)
             } else {
                 response.status(404).end()
-            }            
+            }
         })
-        .catch(error => {
-            console.log('Error fetching person: ', error)
-            response.status(400).send({ error: 'malformatted id' })
-        })
+        .catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (request, response) => {
+app.delete('/api/persons/:id', (request, response, next) => {
     Person
         .findByIdAndDelete(request.params.id)
-        .then(result => {
-            response.status(204).end()
-        })
-        .catch(error => {
-            console.log("error: ", error)
-            response.status(404).end()
-        })
+        .then(result => response.status(204).end())
+        .catch(error => next(error))
 })
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
     const error = validateRequest(request)
     if (error) {
         return response.status(400).json(error)
@@ -126,10 +125,7 @@ app.post('/api/persons', (request, response) => {
             console.log(`added ${savedPerson.name} ${savedPerson.number}`)
             response.json(savedPerson)
         })
-        .catch(error => {
-            console.log('Error adding person: ', error)
-            response.status(400).json(error)
-        })
+        .catch(error => next(error))
 })
 
 const PORT = process.env.PORT || 3001
