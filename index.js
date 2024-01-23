@@ -1,6 +1,8 @@
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
+const Person = require('./models/person')
 
 const app = express()
 
@@ -69,12 +71,6 @@ getHTMLPage = () => {
     return page
 }
 
-getPerson = (idString) => {
-    const id = Number(idString)
-    const person = persons.find(person => person.id === id)
-    return person
-}
-
 deletePerson = (idString) => {
     const id = Number(idString)
     const person = persons.find(person => person.id === id)
@@ -83,18 +79,6 @@ deletePerson = (idString) => {
     }
     return person
 }
-
-addPerson = (body) => {
-    const person = {
-        "id": generateID(),
-        "name": body.name,
-        "number": body.number
-    }
-    persons = persons.concat(person)
-    return person
-}
-
-generateID = () => Math.floor(Math.random() * 1000000)
 
 validateRequest = (request) => {
     if (!request.body) {
@@ -106,14 +90,22 @@ validateRequest = (request) => {
         return { error: 'Name and Number are required fields' }
     }
 
-    if (persons.some(person => person.name === name)) {
-        return { error: 'Name already exists in the phonebook' }
-    }
+    // TODO: impl in next exercises 
+    // if (persons.some(person => person.name === name)) {
+    //     return { error: 'Name already exists in the phonebook' }
+    // }
 }
 
 // Requests
 app.get('/api/persons', (request, response) => {
-    response.json(persons)
+    Person
+        .find({})
+        .then(persons => {
+            response.json(persons)
+        })
+        .catch(error => {
+            console.error('Error fetching phonebook: ', error)
+        })
 })
 
 app.get('/info', (request, response) => {
@@ -121,13 +113,15 @@ app.get('/info', (request, response) => {
 })
 
 app.get('/api/persons/:id', (request, response) => {
-    const person = getPerson(request.params.id)
-
-    if (person) {
-        response.json(person)
-    } else {
-        response.status(404).end()
-    }
+    Person
+        .findById(request.params.id)
+        .then(person => {
+            response.json(person)
+        })
+        .catch(error => {
+            console.error('Error fetching person: ', error)
+            response.status(404).end()
+        })
 })
 
 app.delete('/api/persons/:id', (request, response) => {
@@ -146,8 +140,20 @@ app.post('/api/persons', (request, response) => {
         return response.status(400).json(error)
     }
 
-    const person = addPerson(request.body)
-    response.json(person)
+    const person = new Person({
+        name: request.body.name,
+        number: request.body.number,
+    })
+
+    person
+        .save()
+        .then(savedPerson => {
+            console.log(`added ${savedPerson.name} ${savedPerson.number}`)
+            response.json(savedPerson)
+        })
+        .catch(error => {
+            console.error('Error adding person: ', error)
+        })
 })
 
 const PORT = process.env.PORT || 3001
