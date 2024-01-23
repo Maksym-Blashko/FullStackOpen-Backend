@@ -50,10 +50,10 @@ getCurrentDate = () => {
     return res
 }
 
-getHTMLPage = () => {
+getInfoPage = (totalPersons) => {
     const page = `
         <div>
-            <p>Phonebook has info for ${persons.length} people</p>
+            <p>Phonebook has info for ${totalPersons} people</p>
             <p>${getCurrentDate()}</p>
         </div>`
 
@@ -69,11 +69,6 @@ validateRequest = (request) => {
     if (!name || !number) {
         return { error: 'Name and Number are required fields' }
     }
-
-    // TODO: impl in next exercises 
-    // if (persons.some(person => person.name === name)) {
-    //     return { error: 'Name already exists in the phonebook' }
-    // }
 }
 
 // Requests
@@ -84,8 +79,11 @@ app.get('/api/persons', (request, response, next) => {
         .catch(error => next(error))
 })
 
-app.get('/info', (request, response) => {
-    response.send(getHTMLPage())
+app.get('/info', (request, response, next) => {
+    Person
+        .countDocuments({})
+        .then(totalPersons => response.send(getInfoPage(totalPersons)))
+        .catch(error => next(error))
 })
 
 app.get('/api/persons/:id', (request, response, next) => {
