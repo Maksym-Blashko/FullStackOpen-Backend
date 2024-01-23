@@ -16,28 +16,6 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :r
 // Data
 let daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 let months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-let persons = [
-    {
-        "id": 1,
-        "name": "Arto Hellas",
-        "number": "040-123456"
-    },
-    {
-        "id": 2,
-        "name": "Ada Lovelace",
-        "number": "39-44-5323523"
-    },
-    {
-        "id": 3,
-        "name": "Dan Abramov",
-        "number": "12-43-234345"
-    },
-    {
-        "id": 4,
-        "name": "Mary Poppendieck",
-        "number": "39-23-6423122"
-    }
-]
 
 // Methods
 getCurrentDate = () => {
@@ -71,15 +49,6 @@ getHTMLPage = () => {
     return page
 }
 
-deletePerson = (idString) => {
-    const id = Number(idString)
-    const person = persons.find(person => person.id === id)
-    if (person) {
-        persons = persons.filter(person => person.id !== id)
-    }
-    return person
-}
-
 validateRequest = (request) => {
     if (!request.body) {
         return { error: 'content missing' }
@@ -104,7 +73,7 @@ app.get('/api/persons', (request, response) => {
             response.json(persons)
         })
         .catch(error => {
-            console.error('Error fetching phonebook: ', error)
+            console.log('Error fetching phonebook: ', error)
         })
 })
 
@@ -116,22 +85,28 @@ app.get('/api/persons/:id', (request, response) => {
     Person
         .findById(request.params.id)
         .then(person => {
-            response.json(person)
+            if (person) {
+                response.json(person)
+            } else {
+                response.status(404).end()
+            }            
         })
         .catch(error => {
-            console.error('Error fetching person: ', error)
-            response.status(404).end()
+            console.log('Error fetching person: ', error)
+            response.status(400).send({ error: 'malformatted id' })
         })
 })
 
 app.delete('/api/persons/:id', (request, response) => {
-    const person = deletePerson(request.params.id)
-
-    if (person) {
-        response.status(204).end()
-    } else {
-        response.status(404).end()
-    }
+    Person
+        .findByIdAndDelete(request.params.id)
+        .then(result => {
+            response.status(204).end()
+        })
+        .catch(error => {
+            console.log("error: ", error)
+            response.status(404).end()
+        })
 })
 
 app.post('/api/persons', (request, response) => {
@@ -152,7 +127,8 @@ app.post('/api/persons', (request, response) => {
             response.json(savedPerson)
         })
         .catch(error => {
-            console.error('Error adding person: ', error)
+            console.log('Error adding person: ', error)
+            response.status(400).json(error)
         })
 })
 
