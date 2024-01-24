@@ -11,10 +11,11 @@ morgan.token('req-body', (req) => JSON.stringify(req.body))
 const errorHandler = (error, request, response, next) => {
     console.error(error.message)
 
-    if (error.name === 'CastError') {
-        return response.status(400).send({ error: 'malformatted id' })
-    } else if (error.name === 'ValidationError') {
-        return response.status(400).json({ error: error.message })
+    switch (error.name) {
+        case 'CastError':
+            return response.status(400).json({ error: 'malformatted id' })
+        case 'ValidationError':
+            return response.status(400).json({ error: error.message })
     }
 
     next(error)
@@ -24,7 +25,6 @@ app.use(cors())
 app.use(express.static('static_dist'))
 app.use(express.json())
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :req-body'))
-app.use(errorHandler)
 
 // Data
 let daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -60,17 +60,6 @@ getInfoPage = (totalPersons) => {
         </div>`
 
     return page
-}
-
-validateRequest = (request) => {
-    if (!request.body) {
-        return { error: 'content missing' }
-    }
-
-    const { name, number } = request.body
-    if (!name || !number) {
-        return { error: 'Name and Number are required fields' }
-    }
 }
 
 // Requests
@@ -120,11 +109,6 @@ app.delete('/api/persons/:id', (request, response, next) => {
 })
 
 app.post('/api/persons', (request, response, next) => {
-    const error = validateRequest(request)
-    if (error) {
-        return next(error)
-    }
-
     const person = new Person({
         name: request.body.name,
         number: request.body.number,
@@ -138,6 +122,8 @@ app.post('/api/persons', (request, response, next) => {
         })
         .catch(error => next(error))
 })
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
